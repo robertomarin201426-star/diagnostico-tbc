@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis de Cobertura y Expansión - TBC Edoméx</title>
+    <!-- Tailwind CSS for modern responsive layout -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Preconnect and Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Custom styling with strict typography rules -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Montserrat', 'sans-serif'],
+                        mono: ['Share Tech Mono', 'monospace'],
+                    },
+                    colors: {
+                        instBlue: '#0A3D62',
+                        instGold: '#F5B041',
+                        darkBg: '#080d16',
+                        panelBg: 'rgba(10, 25, 47, 0.7)',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #040810;
+            color: #f1f5f9;
+            overflow-x: hidden;
+        }
+
+        /* Strict typographical directives as requested */
+        .slide-title {
+            font-size: 19pt !important;
+            font-weight: 700;
+            line-height: 1.35;
+            color: #ffffff;
+        }
+
+        .slide-subtitle {
+            font-size: 17pt !important;
+            font-weight: 500;
+            line-height: 1.4;
+            color: #F5B041;
+        }
+
+        .slide-text {
+            font-size: 14pt !important;
+            font-weight: 300;
+            line-height: 1.6;
+            color: #e2e8f0;
+        }
+
+        /* Premium Glassmorphism and UI Panels */
+        .glass-panel {
+            background: rgba(10, 20, 38, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(245, 176, 65, 0.15);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .glass-panel-accent {
+            background: rgba(10, 61, 98, 0.25);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(245, 176, 65, 0.25);
+        }
+
+        /* Animations */
+        @keyframes pulse-radar {
+            0% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 0 0 rgba(245, 176, 65, 0.7); }
+            70% { transform: scale(1.15); opacity: 0.3; box-shadow: 0 0 0 15px rgba(245, 176, 65, 0); }
+            100% { transform: scale(0.95); opacity: 0.1; box-shadow: 0 0 0 0 rgba(245, 176, 65, 0); }
+        }
+        
+        .pulse-marker {
+            animation: pulse-radar 2.2s infinite;
+        }
+
+        @keyframes sweep {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        .radar-sweep::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(to bottom, rgba(245, 176, 65, 0), rgba(245, 176, 65, 0.5), rgba(245, 176, 65, 0));
+            animation: sweep 4s linear infinite;
+        }
+
+        /* Standard custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #040810;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #0A3D62;
+            border-radius: 4px;
+            border: 1px solid rgba(245, 176, 65, 0.2);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #F5B041;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased min-h-screen flex flex-col justify-between">
+
+    <!-- ENCABEZADO INSTITUCIONAL -->
+    <header class="w-full bg-[#0A3D62]/90 border-b-2 border-instGold px-4 py-3 lg:px-8 shadow-2xl flex flex-wrap items-center justify-between gap-4 z-40">
+        <div class="flex items-center gap-3.5">
+            <div class="bg-white p-1 rounded-md shadow-md flex items-center justify-center">
+                <!-- Fallback to school icon if logo image fails, keeping official design references -->
+                <i class="fa-solid fa-graduation-cap text-[#0A3D62] text-2xl lg:text-3xl px-1"></i>
+            </div>
+            <div>
+                <h1 class="text-white font-bold text-sm lg:text-base tracking-wide uppercase">Gobierno del Estado de México</h1>
+                <p class="text-instGold text-[11px] lg:text-xs font-mono font-bold tracking-wider">Secretaría de Educación • Subsecretaría de Educación Media Superior</p>
+            </div>
+        </div>
+        <!-- Digital Indicators -->
+        <div class="flex gap-4 items-center text-xs font-mono">
+            <div class="bg-black/40 px-3 py-1.5 rounded-md border border-slate-800 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="text-slate-300">SISTEMA INTEGRAL GIS</span>
+            </div>
+            <div class="hidden md:flex bg-black/40 px-3 py-1.5 rounded-md border border-slate-800 items-center gap-2">
+                <span class="text-instGold font-bold">EDOMÉX PROYECTA 2026</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- AREA DE TRABAJO PRINCIPAL (Dashboard Estilo Power BI / GIS) -->
+    <main class="w-full max-w-[1680px] mx-auto p-4 lg:p-6 grid grid-cols-1 xl:grid-cols-12 gap-6 flex-grow items-stretch">
+        
+        <!-- PANEL IZQUIERDO: Información Estratégica (7/12 ancho en pantallas XL) -->
+        <section class="xl:col-span-7 flex flex-col justify-between glass-panel p-6 rounded-2xl relative overflow-hidden min-h-[620px] lg:min-h-[720px] transition-all duration-300">
+            <!-- Background futuristic grid -->
+            <div class="absolute inset-0 bg-[linear-gradient(to_right,#0c1d36_1px,transparent_1px),linear-gradient(to_bottom,#0c1d36_1px,transparent_1px)] bg-[size:24px_24px] opacity-25 pointer-events-none"></div>
+            
+            <div class="relative z-10 flex-grow flex flex-col justify-between">
+                <!-- Dynamic Slide Presentation Frame -->
+                <div id="dynamic-slide-viewport" class="w-full flex-grow flex flex-col justify-start">
+                    <!-- Loaded dynamically via JavaScript -->
+                </div>
+
+                <!-- CONTROLES NAVEGACIONALES -->
+                <div class="pt-6 mt-6 border-t border-[#F5B041]/20 flex flex-wrap gap-4 items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <button onclick="prevSlide()" class="px-4 py-2.5 rounded-lg bg-slate-900 hover:bg-[#0A3D62] border border-[#F5B041]/30 hover:border-instGold text-white transition-all duration-200 flex items-center gap-2 text-xs font-semibold">
+                            <i class="fa-solid fa-chevron-left text-instGold"></i> Anterior
+                        </button>
+                        <button onclick="nextSlide()" class="px-4 py-2.5 rounded-lg bg-[#0A3D62] hover:bg-[#0A3D62]/80 border border-instGold text-white transition-all duration-200 flex items-center gap-2 text-xs font-semibold">
+                            Siguiente <i class="fa-solid fa-chevron-right text-instGold"></i>
+                        </button>
+                    </div>
+
+                    <!-- Direct Jump Dropdown -->
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-slate-400 font-mono">Ubicación:</span>
+                        <select id="slide-jump" onchange="jumpToSlide(this.value)" class="bg-slate-950 border border-[#F5B041]/30 rounded-lg text-xs p-2 text-slate-200 focus:outline-none focus:border-instGold max-w-[210px] sm:max-w-xs">
+                            <!-- Injected by JavaScript -->
+                        </select>
+                    </div>
+
+                    <!-- Slide counter badge -->
+                    <div class="bg-black/40 px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-mono">
+                        DIAPOSITIVA: <span id="slide-indicator" class="text-instGold font-bold">1 / 17</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PANEL DERECHO: Cartografía y Referencias Visuales (5/12 ancho) -->
+        <section class="xl:col-span-5 glass-panel p-5 rounded-2xl flex flex-col justify-between items-stretch gap-4 min-h-[620px] lg:min-h-[720px]">
+            
+            <!-- HEADER DEL VISOR GEOGRÁFICO -->
+            <div class="bg-slate-950/70 p-3 rounded-xl border border-[#F5B041]/20 flex flex-col gap-1">
+                <span class="text-[10px] font-mono text-instGold tracking-widest uppercase flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-nodes animate-pulse"></i> Sistema de Información Geográfica (GIS)
+                </span>
+                <h4 class="text-xs font-semibold text-white uppercase tracking-wider">
+                    Análisis Espacial de la Oferta y Demanda del TBC
+                </h4>
+            </div>
+
+            <!-- GEOLOCALIZACIÓN MULTI-NIVEL (Interactive Map Hub) -->
+            <div class="flex-grow flex flex-col justify-between gap-4 py-2 relative">
+                
+                <!-- 1. CONTEXTO NACIONAL (tlaxcala_edo.jpg) - Estilo Inserción Metodológica -->
+                <div class="w-full grid grid-cols-12 gap-3 bg-slate-900/40 p-2.5 rounded-xl border border-slate-800">
+                    <div class="col-span-4 relative flex items-center justify-center bg-black/30 rounded-lg overflow-hidden border border-slate-700/50 aspect-[4/3]">
+                        <img src="tlaxcala_edo.jpg" alt="Mapa Nacional" class="w-full h-full object-cover opacity-85 hover:opacity-100 transition-opacity" onerror="this.src='https://placehold.co/200x150/0a3d62/ffffff?text=Contexto+Nacional'">
+                        <!-- Scanner Overlay -->
+                        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#F5B041]/10 to-transparent animate-pulse pointer-events-none"></div>
+                    </div>
+                    <div class="col-span-8 flex flex-col justify-center">
+                        <span class="text-[9px] font-mono text-instGold uppercase font-bold tracking-wider">Referencia de Proyección Federal</span>
+                        <h5 class="text-[11px] font-bold text-white mt-0.5">Integración y Zonificación Nacional</h5>
+                        <p class="text-[10px] text-slate-300 font-sans mt-1 leading-relaxed">
+                            Alineación con el mapa de proyección federal <strong class="font-mono text-xs">tlaxcala_edo.jpg</strong>, validando la georreferenciación de las 17 zonas y el modelo de expansión estatal.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 2. MAPA FOCALIZADO DEL ESTADO DE MÉXICO (98c085_6a69e2be27b79d78d18376ac1b509310.avif) -->
+                <div class="flex-grow flex flex-col items-center justify-center relative bg-slate-950/45 border border-slate-800/80 rounded-xl p-4 overflow-hidden min-h-[290px]">
+                    
+                    <div class="absolute top-2 left-3 z-20 bg-slate-900/90 px-2 py-1 rounded border border-instGold/30 text-[9px] font-mono text-instGold uppercase flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-instGold"></span> Cartografía de Enlace: 98c085_6a69e2be27b79d78d18376ac1b509310.avif
+                    </div>
+
+                    <!-- Map container with relative positioning for GPS alignment overlay -->
+                    <div class="relative w-full max-w-[340px] aspect-[300/240] rounded-xl overflow-hidden shadow-2xl border border-slate-800/80 bg-slate-900 radar-sweep">
+                        <!-- Main Map Image -->
+                        <img src="98c085_6a69e2be27b79d78d18376ac1b509310.avif" alt="Mapa Estado de México" class="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity duration-300" onerror="this.src='https://placehold.co/340x272/0a3d62/ffffff?text=Edomex+Cartografia'">
+                        
+                        <!-- DYNAMIC LASER TARGET PIN (Overlaid precisely per coordinate specs) -->
+                        <div id="dynamic-target-overlay" class="absolute pointer-events-none inset-0">
+                            <div id="target-coordinates" class="absolute transition-all duration-700 ease-out flex items-center justify-center" style="left: 57%; top: 55%; transform: translate(-50%, -50%);">
+                                <!-- Target crosshairs -->
+                                <div class="absolute w-14 h-14 rounded-full border border-instGold/40 animate-spin" style="animation-duration: 8s;"></div>
+                                <div class="absolute w-8 h-8 rounded-full border border-dashed border-red-500/40 animate-spin" style="animation-duration: 12s;"></div>
+                                <div class="absolute w-12 h-12 rounded-full bg-instGold/20 pulse-marker"></div>
+                                <div class="absolute w-7 h-7 rounded-full bg-red-500/10 pulse-marker" style="animation-delay: 0.6s;"></div>
+                                
+                                <!-- Center core point -->
+                                <div class="w-4 h-4 rounded-full bg-instGold border-2 border-white shadow-lg relative z-10 flex items-center justify-center">
+                                    <div class="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                                </div>
+                                
+                                <!-- Floating Flag Tooltip -->
+                                <div class="absolute -top-12 bg-slate-950/95 text-instGold text-[10px] font-bold font-mono px-2 py-1 rounded border border-instGold/80 whitespace-nowrap shadow-2xl flex items-center gap-1">
+                                    <i class="fa-solid fa-crosshairs text-red-500 animate-pulse"></i>
+                                    <span id="current-target-label">Toluca</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- INTERACTIVE MAP OVERLAY NODES (All 17 clickable pins mapped on Edomex illustration) -->
+                        <div class="absolute inset-0 z-30 pointer-events-auto">
+                            <!-- Clickable targets placed on specific percentages matching cities/regions of the image -->
+                            <button onclick="jumpToSlide(0)" class="absolute w-4 h-4 bg-white/40 border border-white rounded-full hover:scale-150 transition-transform flex items-center justify-center cursor-pointer group" style="left: 57%; top: 55%;" title="Edomex Cobertura Global">
+                                <span class="w-1.5 h-1.5 bg-instBlue rounded-full"></span>
+                            </button>
+                            <button onclick="jumpToSlide(1)" class="absolute w-4 h-4 bg-white/40 border border-white rounded-full hover:scale-150 transition-transform flex items-center justify-center cursor-pointer group" style="left: 74%; top: 28%;" title="Acolman">
+                                <span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                            </button>
+                            <button onclick="jumpToSlide(2)" class="absolute w-4 h-4 bg-white/40 border border-white rounded-full hover:scale-150 transition-transform flex items-center justify-center cursor-pointer group" style="left: 35%; top: 84%;" title="Amatepec">
+                                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                            </button>
+                            <button onclick="jumpToSlide(3)" class="absolute w-4 h-4 bg-white/40 border border-white rounded-full hover:scale-150 transition-transform flex items-center justify-center cursor-pointer group" style="left: 80%; top: 35%;" title="Atenco">
+                                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                            </button>
+                            <button onclick="jumpToSlide(4)" class="absolute w-4 h-4 bg-white/40 border border-white rounded-full hover:scale-150 transition-transform flex items-center justify-center cursor-pointer group" style="left: 67%; top: 36%;" title="Atizapán de Zaragoza">
+                                <span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                            </button>
+                            <button onclick="jumpToSlide(5)" class="absolute w-4 h-4 bg-white/40 border border-white rounded-full hover:scale-150 transition-transform flex items-center justify-center cursor-pointer group" style="left: 74%; top: 33%;" title="Coacalco">
+                                <span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
+                            </button>
+                            <button onclick="jumpToSlide(6)" class="absolute w-4 h-4 bg-white/40 border border-white rounded-full hover:scale-150 transition-transform flex items-center justify-center cursor-pointer group" style="left: 57%; top: 72%;" title="Coatepec Harinas">
+                                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                            </button>
+                            <button onclick="jumpToSlide(7)" class="absolute w-4 h-4 bg-white/40 border border-white rounded-full hover:scale-150 transition-transform flex items-center justify-center cursor-pointer group" style="left: 79%; top: 47%;" title="La Paz">
+                                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                            </button>
+                            <button onclick="jumpToSlide(8)" class="absolute w-4 h-4 bg-white/40 border border-white rounded-full hover:scale-150 transition-transform flex items-center justify-center cursor-pointer group" style="left: 73%; top: 44%;" title="Nezahualcóyotl">
+                                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                            </button>
+                            <button onclick="jumpToSlide(9)" class="absolute w-4 h-4 bg-white/40 border border-white rounded-full hover:scale-150 transition-transform flex items-center justify-center cursor-pointer group" style="left: 82%; top: 41%;" title="Texcoco">
+                                <span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
+                            </button>
+                            <button onclick="jumpToSlide(10)" class="absolute w-4 h-4 bg-white/40 border border-white rounded-full hover:scale-150 transition-transform flex items-center justify-center cursor-pointer group" style="left: 68%; top: 37%;" title="Tlalnepantla">
+                                <span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                            </button>
+                            <button onclick="jumpToSlide(11)" class="absolute w-4 h-4 bg-white/40 border border-white rounded-full hover:scale-150 transition-transform flex items-center justify-center cursor-pointer group" style="left: 55%; top: 53%;" title="Toluca">
+                                <span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
+                            </button>
+                            <button onclick="jumpToSlide(12)" class="absolute w-4 h-4 bg-white/40 border border-white rounded-full hover:scale-150 transition-transform flex items-center justify-center cursor-pointer group" style="left: 48%; top: 51%;" title="Almoloya de Juárez">
+                                <span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
+                            </button>
+                            <button onclick="jumpToSlide(13)" class="absolute w-4 h-4 bg-white/40 border border-white rounded-full hover:scale-150 transition-transform flex items-center justify-center cursor-pointer group" style="left: 51%; top: 26%;" title="Atlacomulco">
+                                <span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
+                            </button>
+                            <button onclick="jumpToSlide(14)" class="absolute w-4 h-4 bg-white/40 border border-white rounded-full hover:scale-150 transition-transform flex items-center justify-center cursor-pointer group" style="left: 84%; top: 54%;" title="Chalco">
+                                <span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                            </button>
+                            <button onclick="jumpToSlide(15)" class="absolute w-4 h-4 bg-white/40 border border-white rounded-full hover:scale-150 transition-transform flex items-center justify-center cursor-pointer group" style="left: 88%; top: 50%;" title="Ixtapaluca">
+                                <span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                            </button>
+                            <button onclick="jumpToSlide(16)" class="absolute w-4 h-4 bg-white/40 border border-white rounded-full hover:scale-150 transition-transform flex items-center justify-center cursor-pointer group" style="left: 61%; top: 33%;" title="Nextlalpan y Nicolás Romero">
+                                <span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. DETALLE DE LOCALIZACIÓN GEOGRÁFICA -->
+                <div class="bg-slate-905/70 p-3 rounded-xl border border-slate-800 text-xs font-mono flex flex-wrap justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-compass text-instGold"></i>
+                        <span id="label-coord-lat" class="text-slate-300">LAT: 19.3561° N</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-location-crosshairs text-instGold"></i>
+                        <span id="label-coord-lng" class="text-slate-300">LNG: 99.6469° W</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-map text-instGold"></i>
+                        <span id="label-region-tag" class="text-instGold font-bold">Valle de Toluca</span>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+    </main>
+
+    <!-- PIE DE PRESENTACIÓN -->
+    <footer class="w-full bg-[#0A3D62] text-white border-t border-instGold/40 px-6 py-3 flex flex-wrap justify-between items-center text-[10px] font-mono tracking-wider text-slate-300">
+        <span>ESTUDIO TÉCNICO INTERACTIVO DE COBERTURA • DTC EDOMÉX</span>
+        <span>PROYECCIÓN GEOESTRATÉGICA 2026</span>
+    </footer>
+
+    <script>
+        // MASTER DATABASE OF ALL 17 INTERACTIVE SLIDES
+        // Maps precise pixel/percentage alignments of image: 98c085_6a69e2be27b79d78d18376ac1b509310.avif
+        const presentationData = [
+            {
+                id: 1,
+                municipio: "Estado de México",
+                region: "Cobertura Global",
+                lat: "19.3501° N",
+                lng: "99.1235° W",
+                posX: 57,
+                posY: 55,
+                title: "Análisis de Cobertura y Potencial de Expansión de Telebachillerato Comunitario en Municipios Estratégicos del Estado de México",
+                subtitle: "Diagnóstico territorial de localidades con oportunidad de atención educativa",
+                contentHTML: `
+                    <div class="space-y-5 slide-text">
+                        <div class="inline-flex items-center gap-2 bg-[#0A3D62]/80 text-instGold px-3 py-1 rounded-full text-xs font-mono border border-instGold/30">
+                            <i class="fa-solid fa-map-location-dot animate-bounce"></i> Marco Estratégico 2026
+                        </div>
+                        <h2 class="slide-title text-white">
+                            Análisis de Cobertura y Potencial de Expansión de Telebachillerato Comunitario en Municipios Estratégicos del Estado de México
+                        </h2>
+                        <p class="slide-text">
+                            Presentamos el diagnóstico territorial exhaustivo de localidades prioritarias en 17 municipios del Estado de México. El objetivo clave es mapear el potencial de expansión de cobertura del modelo <strong class="text-instGold font-bold">TBC</strong> ante zonas de alta densidad poblacional y desconexión vial.
+                        </p>
+                        
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                            <div class="p-3 bg-slate-900/80 rounded-xl border border-[#F5B041]/20 text-center">
+                                <span class="text-2xl font-bold text-instGold font-mono">17</span>
+                                <p class="text-[10px] text-slate-400 font-mono mt-0.5">MUNICIPIOS</p>
+                            </div>
+                            <div class="p-3 bg-slate-900/80 rounded-xl border border-[#F5B041]/20 text-center">
+                                <span class="text-2xl font-bold text-emerald-400 font-mono">125</span>
+                                <p class="text-[10px] text-slate-400 font-mono mt-0.5">TBC ACTIVOS</p>
+                            </div>
+                            <div class="p-3 bg-slate-900/80 rounded-xl border border-[#F5B041]/20 text-center">
+                                <span class="text-2xl font-bold text-cyan-400 font-mono">15-18</span>
+                                <p class="text-[10px] text-slate-400 font-mono mt-0.5">RANGO DE EDAD</p>
+                            </div>
+                            <div class="p-3 bg-slate-900/80 rounded-xl border border-[#F5B041]/20 text-center">
+                                <span class="text-2xl font-bold text-pink-400 font-mono">GIS</span>
+                                <p class="text-[10px] text-slate-400 font-mono mt-0.5">SOPORTE DE DATOS</p>
+                            </div>
+                        </div>
+
+                        <div class="p-4 bg-[#0A3D62]/30 border-l-4 border-instGold rounded-r-xl text-xs space-y-1">
+                            <p class="text-white font-bold font-mono">ENLACE GEORREFERENCIADO NACIONAL:</p>
+                            <p class="text-slate-300 leading-relaxed">
+                                El modelo estratégico cuenta con un sistema de proyección integrado con la cartografía nacional provista por <span class="text-instGold font-semibold">tlaxcala_edo.jpg</span> para análisis de macrolocalización y <span class="text-instGold font-semibold">98c085_6a69e2be27b79d78d18376ac1b509310.avif</span> para la identificación precisa de cada cabecera y localidad municipal.
+                            </p>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 2,
+                municipio: "Acolman",
+                region: "ZONA 23",
+                lat: "19.6389° N",
+                lng: "98.9133° W",
+                posX: 74,
+                posY: 28,
+                title: "ACOLMAN - Fracc. Real del Valle",
+                subtitle: "Análisis de Oportunidad por Crecimiento Residencial Reciente",
+                contentHTML: `
+                    <div class="space-y-4 slide-text">
+                        <div class="inline-flex items-center gap-2 bg-red-500/10 text-red-400 px-3 py-1 rounded-full text-xs font-mono border border-red-500/20">
+                            <i class="fa-solid fa-chart-line"></i> Demanda Potencial Alta
+                        </div>
+                        <h2 class="slide-title">ACOLMAN • Fraccionamiento Real del Valle</h2>
+                        <p class="slide-text">
+                            <strong>Diagnóstico:</strong> Existe demanda potencial sustantiva para fortalecer la cobertura educativa en este núcleo residencial debido al rápido desarrollo urbano. El plantel de referencia más cercano no cubre la densidad estudiantil emergente.
+                        </p>
+                        
+                        <!-- KPIs -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                                <span class="text-xl font-bold font-mono text-white">18,500</span>
+                                <p class="text-[10px] text-slate-400 font-mono mt-1">Población Estimada</p>
+                            </div>
+                            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                                <span class="text-xl font-bold font-mono text-instGold">1,420</span>
+                                <p class="text-[10px] text-slate-400 font-mono mt-1">Jóvenes 15-18 Años</p>
+                            </div>
+                            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                                <span class="text-xl font-bold font-mono text-amber-500">71%</span>
+                                <p class="text-[10px] text-slate-400 font-mono mt-1">Cobertura Estimada</p>
+                            </div>
+                            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                                <span class="text-xl font-bold font-mono text-emerald-400">180</span>
+                                <p class="text-[10px] text-slate-400 font-mono mt-1">Matrícula Potencial</p>
+                            </div>
+                        </div>
+
+                        <!-- Technical Card -->
+                        <div class="p-3.5 bg-slate-900/60 border-l-4 border-amber-500 rounded-r-xl text-xs space-y-1">
+                            <strong class="text-white block font-mono">INFRAESTRUCTURA RELACIONADA:</strong>
+                            <p class="text-slate-300">
+                                Plantel de Referencia de la Red: <span class="text-instGold font-bold">TBC 15</span>. El crecimiento habitacional acelerado posiciona a este fraccionamiento como un sector prioritario de fortalecimiento académico.
+                            </p>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 3,
+                municipio: "Amatepec",
+                region: "Región Sur",
+                lat: "18.6797° N",
+                lng: "100.1833° W",
+                posX: 35,
+                posY: 84,
+                title: "AMATEPEC - Tierra Azul",
+                subtitle: "Monitoreo de Infraestructura Rural Distante",
+                contentHTML: `
+                    <div class="space-y-4 slide-text">
+                        <div class="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-xs font-mono border border-emerald-500/20">
+                            <i class="fa-solid fa-arrows-split-up-and-left"></i> Sinergia Regional de Oferta
+                        </div>
+                        <h2 class="slide-title">AMATEPEC • Tierra Azul</h2>
+                        <p class="slide-text">
+                            <strong>Diagnóstico:</strong> Localidad rural con distancia crítica de traslado (<strong>2 km</strong>) hacia el <span class="text-instGold font-semibold">TBC 46</span>. Se proyecta la próxima apertura de un Colegio de Bachillerato Tecnológico (CBT), lo que reestructurará la absorción estudiantil regional.
+                        </p>
+                        
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                                <span class="text-xl font-bold font-mono text-white">6,200</span>
+                                <p class="text-[10px] text-slate-400 font-mono">Población Total</p>
+                            </div>
+                            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                                <span class="text-xl font-bold font-mono text-instGold">480</span>
+                                <p class="text-[10px] text-slate-400 font-mono">Est. Potenciales</p>
+                            </div>
+                            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                                <span class="text-xl font-bold font-mono text-emerald-400">65%</span>
+                                <p class="text-[10px] text-slate-400 font-mono">Cobertura Actual</p>
+                            </div>
+                            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                                <span class="text-xl font-bold font-mono text-cyan-400">12%</span>
+                                <p class="text-[10px] text-slate-400 font-mono">Índice Crecimiento</p>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-emerald-950/20 border border-emerald-500/30 rounded-xl text-xs space-y-1">
+                            <strong class="text-emerald-400 block font-mono"><i class="fa-solid fa-circle-check"></i> HALLAZGO DIRECTIVO:</strong>
+                            <p class="text-slate-300">
+                                La apertura del CBT complementará la oferta educativa regional en lugar de competir. Se recomienda mantener la oferta de TBC para capturar egreso de localidades de difícil acceso.
+                            </p>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 4,
+                municipio: "Atenco",
+                region: "Región Oriente",
+                lat: "19.5558° N",
+                lng: "98.9189° W",
+                posX: 80,
+                posY: 35,
+                title: "ATENCO - Av. Seminario",
+                subtitle: "Eficiencia de Accesibilidad para Nueva Santa Rosa",
+                contentHTML: `
+                    <div class="space-y-4 slide-text">
+                        <div class="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-xs font-mono border border-emerald-500/20">
+                            <i class="fa-solid fa-circle-check"></i> Cobertura Favorable
+                        </div>
+                        <h2 class="slide-title">ATENCO • Av. Seminario, Nueva Santa Rosa</h2>
+                        <p class="slide-text">
+                            <strong>Diagnóstico:</strong> El área se encuentra bien servida por la infraestructura educativa preexistente. El acceso hacia el plantel <span class="text-instGold font-bold">TBC 58</span> (ubicado a 4 km de distancia) es eficiente gracias a buenas conexiones viales.
+                        </p>
+                        
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                                <span class="text-xl font-bold font-mono text-white">11,000</span>
+                                <p class="text-[10px] text-slate-400 font-mono mt-1">Población Total</p>
+                            </div>
+                            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                                <span class="text-xl font-bold font-mono text-instGold">210</span>
+                                <p class="text-[10px] text-slate-400 font-mono mt-1">Matrícula Potencial</p>
+                            </div>
+                            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                                <span class="text-xl font-bold font-mono text-emerald-400">74%</span>
+                                <p class="text-[10px] text-slate-400 font-mono mt-1">Cobertura M. S.</p>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-[#0A3D62]/20 border border-[#0A3D62] rounded-xl text-xs">
+                            <p class="text-slate-300 leading-relaxed">
+                                <strong class="text-white font-mono">Estatus Territorial:</strong> No se detectan brechas de cobertura críticas. La infraestructura vigente absorbe de forma sana la tasa de egreso escolar local.
+                            </p>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 5,
+                municipio: "Atizapán de Zaragoza",
+                region: "Valle de México - Norte",
+                lat: "19.5814° N",
+                lng: "99.2817° W",
+                posX: 67,
+                posY: 36,
+                title: "ATIZAPÁN DE ZARAGOZA - San Juan Ixtacala Plano Norte",
+                subtitle: "Foco de Demanda Insatisfecha de Alta Densidad",
+                contentHTML: `
+                    <div class="space-y-4 slide-text">
+                        <div class="inline-flex items-center gap-2 bg-red-500/10 text-red-400 px-3 py-1 rounded-full text-xs font-mono border border-red-500/20">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Zona Estratégica Prioridad Oro
+                        </div>
+                        <h2 class="slide-title">ATIZAPÁN • San Juan Ixtacala Plano Norte</h2>
+                        <p class="slide-text">
+                            <strong>Diagnóstico:</strong> Zona densamente poblada con total ausencia de cobertura escolar cercana en el modelo TBC. Catalogado como un <strong class="text-red-400 font-bold">vacío de oferta absoluto</strong>.
+                        </p>
+                        
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                                <span class="text-xl font-bold font-mono text-white">24,000</span>
+                                <p class="text-[10px] text-slate-400 font-mono mt-1">Población Total</p>
+                            </div>
+                            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                                <span class="text-xl font-bold font-mono text-red-400">2,100</span>
+                                <p class="text-[10px] text-slate-400 font-mono mt-1">Jóvenes (15-18)</p>
+                            </div>
+                            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                                <span class="text-xl font-bold font-mono text-rose-500">69%</span>
+                                <p class="text-[10px] text-slate-400 font-mono mt-1">Cobertura Local</p>
+                            </div>
+                        </div>
+
+                        <div class="p-4 bg-red-950/30 border border-red-500/30 rounded-xl text-xs space-y-1">
+                            <strong class="text-red-400 block font-mono"><i class="fa-solid fa-road-barrier"></i> ACCIÓN EJECUTIVA PROPUESTA:</strong>
+                            <p class="text-slate-300">
+                                Se requiere iniciar exploraciones físicas para una nueva clave o plantel modular de cobertura ágil para captar la alta densidad demográfica que se encuentra desatendida.
+                            </p>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 6,
+                municipio: "Coacalco de Berriozábal",
+                region: "ZONA 74 - 75",
+                lat: "19.6318° N",
+                lng: "99.0963° W",
+                posX: 74,
+                posY: 33,
+                title: "COACALCO - San Rafael",
+                subtitle: "Análisis de Desconexión de Red por Infraestructura Vial",
+                contentHTML: `
+                    <div class="space-y-4 slide-text">
+                        <div class="inline-flex items-center gap-2 bg-amber-500/10 text-amber-400 px-3 py-1 rounded-full text-xs font-mono border border-amber-500/20">
+                            <i class="fa-solid fa-hourglass-half"></i> Barrera de Accesibilidad
+                        </div>
+                        <h2 class="slide-title">COACALCO • San Rafael (Calle Enrique Millán Cejudo)</h2>
+                        <p class="slide-text">
+                            <strong>Diagnóstico:</strong> Aunque existen planteles de enlace (<span class="text-instGold font-semibold">TBC 74 y TBC 75</span>), los tiempos peatonales de traslado son inviables (<strong>superiores a 30 minutos</strong>) debido a barreras físicas y trazos viales de alta peligrosidad.
+                        </p>
+                        
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                                <span class="text-xl font-bold font-mono text-white">35,000</span>
+                                <p class="text-[10px] text-slate-400 font-mono mt-1">Población Urbana</p>
+                            </div>
+                            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                                <span class="text-xl font-bold font-mono text-instGold">450</span>
+                                <p class="text-[10px] text-slate-400 font-mono mt-1">Est. Potenciales</p>
+                            </div>
+                            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                                <span class="text-xl font-bold font-mono text-rose-400">62%</span>
+                                <p class="text-[10px] text-slate-400 font-mono mt-1">Índice Cobertura</p>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs">
+                            <p class="text-slate-300">
+                                <strong class="text-amber-400 font-mono">Riesgo Detectado:</strong> La desconexión eleva la probabilidad de abandono escolar en la transición media superior. Se sugiere considerar transporte focalizado o puente de enlace.
+                            </p>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 7,
+                municipio: "Coatepec Harinas",
+                region: "Región Sur",
+                lat: "18.9247° N",
+                lng: "99.7686° W",
+                posX: 57,
+                posY: 72,
+                title: "COATEPEC HARINAS - Llano Grande",
+                subtitle: "Semáforo Verde - Consolidación Educativa Absoluta",
+                contentHTML: `
+                    <div class="space-y-4 slide-text">
+                        <div class="inline-flex items-center gap-2 bg-emerald-500/15 text-emerald-400 px-3 py-1 rounded-full text-xs font-mono border border-emerald-500/30 animate-pulse">
+                            <i class="fa-solid fa-circle-check"></i> Semáforo Verde (Óptimo)
+                        </div>
+                        <h2 class="slide-title">COATEPEC HARINAS • Llano Grande</h2>
+                        <p class="slide-text">
+                            <strong>Diagnóstico:</strong> Cobertura plenamente consolidada. El plantel de enlace de proximidad (<span class="text-emerald-400 font-bold">TBC 75</span>) se sitúa directamente en el centro demográfico (distancia registrada: <span class="text-emerald-400 font-bold">0 km</span>).
+                        </p>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-slate-900/90 p-4 rounded-xl border border-emerald-500/20 text-center">
+                                <span class="text-3xl font-bold font-mono text-emerald-400">92%</span>
+                                <p class="text-[11px] text-slate-400 font-mono mt-1">Cobertura Territorial Local</p>
+                            </div>
+                            <div class="bg-slate-900/90 p-4 rounded-xl border border-emerald-500/20 text-center">
+                                <span class="text-3xl font-bold font-mono text-instGold">60</span>
+                                <p class="text-[11px] text-slate-400 font-mono mt-1">Excedente de Absorción</p>
+                            </div>
+                        </div>
+
+                        <div class="p-3.5 bg-emerald-950/40 border border-emerald-500/40 rounded-xl text-xs text-center text-slate-300">
+                            <strong>Estatus:</strong> No se requiere asignación de nuevos recursos físicos. Se aconseja mantenimiento ordinario del equipamiento actual.
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 8,
+                municipio: "La Paz",
+                region: "Valle de México - Oriente",
+                lat: "19.3514° N",
+                lng: "98.9767° W",
+                posX: 79,
+                posY: 47,
+                title: "LA PAZ - Col. Ampliación Tecamachalco",
+                subtitle: "Densidad de Red de Abasto Educativo",
+                contentHTML: `
+                    <div class="space-y-4 slide-text">
+                        <div class="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-xs font-mono border border-emerald-500/20">
+                            <i class="fa-solid fa-network-wired"></i> Red de Abasto Integrada
+                        </div>
+                        <h2 class="slide-title">LA PAZ • Col. Ampliación Tecamachalco</h2>
+                        <p class="slide-text">
+                            <strong>Diagnóstico:</strong> Alta concentración de oferta educativa. La zona registra una cobertura integral respaldada por una robusta malla perimetral de 6 planteles de enlace activos en un radio promedio de 4 km.
+                        </p>
+                        
+                        <!-- Mini Interactive List -->
+                        <div class="grid grid-cols-2 gap-3 text-[11px] font-mono">
+                            <div class="bg-slate-950/80 p-2.5 rounded-lg border border-slate-800">
+                                <p class="text-instGold font-bold mb-1">COBERTURA ORIENTE:</p>
+                                <ul class="text-slate-400 space-y-0.5">
+                                    <li>• TBC 73 (3.4 km)</li>
+                                    <li>• TBC 106 (4.3 km)</li>
+                                    <li>• TBC 127 (3.6 km)</li>
+                                </ul>
+                            </div>
+                            <div class="bg-slate-950/80 p-2.5 rounded-lg border border-slate-800">
+                                <p class="text-instGold font-bold mb-1">COBERTURA PONIENTE:</p>
+                                <ul class="text-slate-400 space-y-0.5">
+                                    <li>• TBC 342 (2.0 km)</li>
+                                    <li>• TBC 370 (4.0 km)</li>
+                                    <li>• TBC 371 (5.5 km)</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+                            <span class="text-slate-400">Población Demanda Ampliada: <strong class="text-white">52,000 hab.</strong></span>
+                            <span class="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded border border-emerald-500/20">Abasto Garantizado</span>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 9,
+                municipio: "Nezahualcóyotl",
+                region: "Valle de México - Oriente",
+                lat: "19.4189° N",
+                lng: "99.0233° W",
+                posX: 73,
+                posY: 44,
+                title: "NEZAHUALCÓYOTL - El Sol",
+                subtitle: "Trazado Urbano y Alta Accesibilidad Peatonal",
+                contentHTML: `
+                    <div class="space-y-4 slide-text">
+                        <div class="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-xs font-mono border border-emerald-500/20">
+                            <i class="fa-solid fa-compress"></i> Conectividad Urbana Óptima
+                        </div>
+                        <h2 class="slide-title">NEZAHUALCÓYOTL • Avenida Víctor, El Sol</h2>
+                        <p class="slide-text">
+                            <strong>Diagnóstico:</strong> El trazo en cuadrícula urbana facilita el acceso peatonal de forma sobresaliente. El plantel de referencia <span class="text-instGold font-bold">TBC 108</span> se sitúa a solo 1.7 km de la colonia.
+                        </p>
+                        
+                        <!-- Distance Bar comparison -->
+                        <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <span class="text-[11px] text-slate-400 font-mono">Matriz de Distancias Físicas:</span>
+                            <div class="space-y-2 text-xs font-mono">
+                                <div>
+                                    <div class="flex justify-between text-[10px]"><span>TBC 108 (El Sol)</span> <span class="text-emerald-400">1.7 km (Óptimo)</span></div>
+                                    <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
+                                        <div class="bg-emerald-500 h-full" style="width: 20%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-[10px]"><span>TBC 343</span> <span class="text-red-400">8.9 km (Inviable)</span></div>
+                                    <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
+                                        <div class="bg-red-500 h-full" style="width: 85%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 text-center text-xs">
+                            <div class="bg-slate-950/60 p-2 rounded border border-slate-800">
+                                <span class="text-slate-400 block font-mono">Población Sector:</span>
+                                <strong class="text-white text-base">40,000 hab.</strong>
+                            </div>
+                            <div class="bg-slate-950/60 p-2 rounded border border-slate-800">
+                                <span class="text-slate-400 block font-mono">Índice Absorción:</span>
+                                <strong class="text-emerald-400 text-base">88% (Estable)</strong>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 10,
+                municipio: "Texcoco",
+                region: "ZONA 57 - 459 - 340",
+                lat: "19.5133° N",
+                lng: "98.8821° W",
+                posX: 82,
+                posY: 41,
+                title: "TEXCOCO - Santiaguito Texcoco",
+                subtitle: "Radar de Dispersión en la Franja Oriente",
+                contentHTML: `
+                    <div class="space-y-4 slide-text">
+                        <div class="inline-flex items-center gap-2 bg-amber-500/10 text-amber-400 px-3 py-1 rounded-full text-xs font-mono border border-amber-500/20">
+                            <i class="fa-solid fa-satellite-dish"></i> Radar de Dispersión Territorial
+                        </div>
+                        <h2 class="slide-title">TEXCOCO • Santiaguito Texcoco</h2>
+                        <p class="slide-text">
+                            <strong>Diagnóstico:</strong> Cobertura periférica regular. Los alumnos dependen de la red de transporte ejidal y rutas urbanas para trasladarse a planteles que se localizan en los radios límite del municipio.
+                        </p>
+                        
+                        <!-- Analytical Table -->
+                        <div class="bg-slate-900/90 rounded-xl border border-slate-800 overflow-hidden text-xs">
+                            <table class="w-full text-left font-mono">
+                                <thead class="bg-slate-950 text-slate-400 text-[10px] border-b border-slate-800">
+                                    <tr>
+                                        <th class="p-2">Plantel Relacionado</th>
+                                        <th class="p-2">Distancia Geográfica</th>
+                                        <th class="p-2">Factibilidad Peatonal</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-800 text-[11px] text-slate-300">
+                                    <tr>
+                                        <td class="p-2">TBC 57</td>
+                                        <td class="p-2 text-emerald-400">5.1 km</td>
+                                        <td class="p-2 text-slate-400">Regular</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2">TBC 459</td>
+                                        <td class="p-2 text-emerald-400">5.7 km</td>
+                                        <td class="p-2 text-slate-400">Regular</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2">TBC 340</td>
+                                        <td class="p-2 text-red-400">7.8 km</td>
+                                        <td class="p-2 text-red-400">Inviable</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800 text-xs flex justify-between">
+                            <span class="text-slate-400">Matrícula Potencial Absorbible:</span>
+                            <strong class="text-instGold">310 alumnos</strong>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 11,
+                municipio: "Tlalnepantla",
+                region: "Valle de México - Norte",
+                lat: "19.5256° N",
+                lng: "99.1103° W",
+                posX: 68,
+                posY: 37,
+                title: "TLALNEPANTLA DE BAZ - San Juan Ixhuatepec",
+                subtitle: "Vacío Urbano Crítico Detrás de Autopista",
+                contentHTML: `
+                    <div class="space-y-4 slide-text">
+                        <div class="inline-flex items-center gap-2 bg-red-500/10 text-red-400 px-3 py-1 rounded-full text-xs font-mono border border-red-500/20">
+                            <i class="fa-solid fa-circle-exclamation"></i> Zona Roja de Atención
+                        </div>
+                        <h2 class="slide-title">TLALNEPANTLA • San Juan Ixhuatepec</h2>
+                        <p class="slide-text">
+                            <strong>Diagnóstico:</strong> Zona densa con desconexión estructural física debido a la autopista México-Pachuca. Se detecta un <strong class="text-red-400">vacio de cobertura absoluto</strong> en los servicios TBC.
+                        </p>
+                        
+                        <div class="p-4 bg-red-950/20 border border-red-500/30 rounded-xl space-y-2">
+                            <h4 class="text-xs font-bold text-red-400 font-mono"><i class="fa-solid fa-road-barrier"></i> BARRERA DE INFRAESTRUCTURA:</h4>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                La división vial obliga a los estudiantes egresados de secundaria a realizar costosos y largos trayectos de transporte hacia la CDMX debido a la falta de un plantel local que absorba la demanda.
+                            </p>
+                        </div>
+
+                        <div class="p-3.5 bg-slate-900/60 border-l-4 border-red-500 rounded-r-xl text-xs space-y-1">
+                            <strong class="text-white block font-mono">RECOMENDACIÓN TÉCNICA:</strong>
+                            <p class="text-slate-300">
+                                Catalogada como zona de máxima prioridad de expansión en el plan operativo 2026. Requiere análisis urgente de factibilidad inmobiliaria.
+                            </p>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 12,
+                municipio: "Toluca",
+                region: "ZONA 266",
+                lat: "19.3561° N",
+                lng: "99.6469° W",
+                posX: 55,
+                posY: 53,
+                title: "TOLUCA - San Pablo Autopan",
+                subtitle: "Optimización de Capacidad por Alta Demanda de Matrícula",
+                contentHTML: `
+                    <div class="space-y-4 slide-text">
+                        <div class="inline-flex items-center gap-2 bg-amber-500/10 text-amber-400 px-3 py-1 rounded-full text-xs font-mono border border-amber-500/20">
+                            <i class="fa-solid fa-users"></i> Saturación Escolar Detectada
+                        </div>
+                        <h2 class="slide-title">TOLUCA • San Pablo Autopan (TBC 266)</h2>
+                        <p class="slide-text">
+                            <strong>Diagnóstico:</strong> Demanda sumamente activa en la periferia norte de Toluca. El plantel <span class="text-instGold font-bold">TBC 266</span> opera a 3 km de distancia, registrando altos niveles de saturación por la amplia matrícula local.
+                        </p>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-800">
+                                <span class="text-2xl font-bold font-mono text-white">280</span>
+                                <p class="text-[11px] text-slate-400 font-mono mt-1">Potencial Adicional Estimado</p>
+                            </div>
+                            <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-800">
+                                <span class="text-2xl font-bold font-mono text-instGold">3.0 km</span>
+                                <p class="text-[11px] text-slate-400 font-mono mt-1">Distancia de Enlace</p>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-[#0A3D62]/30 border border-instGold/30 rounded-xl text-xs">
+                            <p class="text-slate-300 leading-relaxed">
+                                <strong class="text-white block mb-1 font-mono">Estrategia Óptima:</strong> Antes de crear nuevos planteles ejidales, se sugiere expandir los grupos educativos de docentes o desdoblar turnos en las aulas del TBC 266.
+                            </p>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 13,
+                municipio: "Almoloya de Juárez",
+                region: "ZONA 32",
+                lat: "19.4583° N",
+                lng: "99.8833° W",
+                posX: 48,
+                posY: 51,
+                title: "ALMOLOYA DE JUÁREZ - Yebuciví",
+                subtitle: "Análisis de Dispersión Rural en Zonas Serranas",
+                contentHTML: `
+                    <div class="space-y-4 slide-text">
+                        <div class="inline-flex items-center gap-2 bg-amber-500/10 text-amber-400 px-3 py-1 rounded-full text-xs font-mono border border-amber-500/20">
+                            <i class="fa-solid fa-mountain"></i> Reto de Dispersión Rural
+                        </div>
+                        <h2 class="slide-title">ALMOLOYA DE JUÁREZ • Yebuciví</h2>
+                        <p class="slide-text">
+                            <strong>Diagnóstico:</strong> Alta fragmentación demográfica. El plantel de enlace idóneo de la red es el <span class="text-instGold font-semibold">TBC 32</span>, situado a una distancia crítica de traslado peatonal de <strong>5.0 km</strong>.
+                        </p>
+                        
+                        <!-- Visual representation of access -->
+                        <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-800 space-y-2">
+                            <span class="text-[11px] text-slate-400 font-mono">Gráfico de Esfuerzo de Traslado Peatonal:</span>
+                            <div class="flex items-center gap-2 text-xs font-mono">
+                                <span class="text-emerald-400">Yebuciví</span>
+                                <div class="flex-grow bg-slate-800 h-2.5 rounded-full overflow-hidden relative">
+                                    <div class="bg-gradient-to-r from-emerald-500 via-amber-500 to-red-500 h-full" style="width: 100%"></div>
+                                    <span class="absolute right-2 text-[8px] text-white font-bold top-[-2px]">5 km</span>
+                                </div>
+                                <span class="text-red-400 font-bold">TBC 32</span>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-slate-950/60 border-l-4 border-amber-500 rounded-r-xl text-xs text-slate-300">
+                            <strong>Alternativa de Mitigación:</strong> Se requiere viabilizar transporte escolar comunitario o evaluar la instalación de un Aula Auxiliar Ejidal para evitar rezago en temporada de lluvia.
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 14,
+                municipio: "Atlacomulco",
+                region: "ZONA 60",
+                lat: "19.7967° N",
+                lng: "99.8739° W",
+                posX: 51,
+                posY: 26,
+                title: "ATLACOMULCO - San José Toxi",
+                subtitle: "Semáforo Amarillo - Duplicidad y Traslape Escolar",
+                contentHTML: `
+                    <div class="space-y-4 slide-text">
+                        <div class="inline-flex items-center gap-2 bg-amber-500/15 text-amber-400 px-3 py-1 rounded-full text-xs font-mono border border-amber-500/30 animate-pulse">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Semáforo Amarillo (Atención)
+                        </div>
+                        <h2 class="slide-title">ATLACOMULCO • San José Toxi</h2>
+                        <p class="slide-text">
+                            <strong>Diagnóstico:</strong> Localidad rural con excelente cercanía (<strong>1 km</strong>) con el <span class="text-instGold font-semibold">TBC 60</span>, sin embargo, existe riesgo de traslape con una Escuela Preparatoria Oficial (EPO) a menos de 2 km de distancia.
+                        </p>
+                        
+                        <!-- Visual dual-indicator -->
+                        <div class="grid grid-cols-2 gap-3 text-xs text-center font-mono">
+                            <div class="bg-slate-900/90 p-3 rounded-xl border border-emerald-500/20">
+                                <span class="text-emerald-400 font-bold block">TBC 60</span>
+                                <span class="text-slate-400 text-[10px] mt-0.5 block">Distancia: 1 km</span>
+                            </div>
+                            <div class="bg-slate-900/90 p-3 rounded-xl border border-amber-500/20">
+                                <span class="text-amber-400 font-bold block">Preparatoria EPO</span>
+                                <span class="text-slate-400 text-[10px] mt-0.5 block">Distancia: &lt; 2 km</span>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs leading-relaxed text-slate-300">
+                            <strong>Directriz Técnica:</strong> Se aconseja consolidar la EPO y enfocar la especialización técnica del TBC para capturar perfiles diferenciados y evitar duplicidad de recursos del erario.
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 15,
+                municipio: "Chalco",
+                region: "Valle de México - Oriente",
+                lat: "19.2619° N",
+                lng: "98.8911° W",
+                posX: 84,
+                posY: 54,
+                title: "CHALCO - Hacienda de Guadalupe",
+                subtitle: "Análisis de Demanda en Nuevos Polos de Desarrollo",
+                contentHTML: `
+                    <div class="space-y-4 slide-text">
+                        <div class="inline-flex items-center gap-2 bg-red-500/10 text-red-400 px-3 py-1 rounded-full text-xs font-mono border border-red-500/20">
+                            <i class="fa-solid fa-arrow-trend-up"></i> Demanda Urbana Emergente
+                        </div>
+                        <h2 class="slide-title">CHALCO • Conjunto Urbano Hacienda de Guadalupe</h2>
+                        <p class="slide-text">
+                            <strong>Diagnóstico:</strong> El rápido desarrollo inmobiliario ha generado una masiva ola de migración de población joven en edad de cursar educación media superior. No existen claves TBC vigentes (<strong class="text-red-400">N/A</strong>) cubriendo este sector.
+                        </p>
+                        
+                        <div class="grid grid-cols-2 gap-3 text-center">
+                            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                                <span class="text-lg font-bold text-red-400 block font-mono">MUY ALTA</span>
+                                <span class="text-[10px] text-slate-400 font-mono">Prioridad Operativa</span>
+                            </div>
+                            <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                                <span class="text-lg font-bold text-white block font-mono">HACIENDA</span>
+                                <span class="text-[10px] text-slate-400 font-mono">Foco Expansión</span>
+                            </div>
+                        </div>
+
+                        <div class="p-3.5 bg-red-950/20 border border-red-500/30 rounded-xl text-xs text-slate-300 leading-relaxed">
+                            <strong>Diagnóstico de Proximidad:</strong> Calificado como uno de los poliscopios de mayor prioridad para la habilitación de un nuevo centro escolar público.
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 16,
+                municipio: "Ixtapaluca",
+                region: "ZONA 107 - 110",
+                lat: "19.3144° N",
+                lng: "98.8547° W",
+                posX: 88,
+                posY: 50,
+                title: "IXTAPALUCA - Ciudad Cuatro Vientos",
+                subtitle: "Monitoreo de Radios de Traslado Excesivos",
+                contentHTML: `
+                    <div class="space-y-4 slide-text">
+                        <div class="inline-flex items-center gap-2 bg-red-500/10 text-red-400 px-3 py-1 rounded-full text-xs font-mono border border-red-500/20">
+                            <i class="fa-solid fa-person-walking-arrow-loop-left"></i> Desconexión de Radio Crítica
+                        </div>
+                        <h2 class="slide-title">IXTAPALUCA • Ciudad Cuatro Vientos</h2>
+                        <p class="slide-text">
+                            <strong>Diagnóstico:</strong> Se identifican serias barreras geográficas de movilidad. Los planteles más cercanos se sitúan a distancias físicamente inviables de traslado escolar (<strong>superando los 11 km</strong>).
+                        </p>
+                        
+                        <!-- Route comparison graphics -->
+                        <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800 space-y-2">
+                            <span class="text-[11px] text-slate-400 font-mono">Radios Físicos de Traslado:</span>
+                            <div class="space-y-1.5 text-xs font-mono">
+                                <div>
+                                    <div class="flex justify-between text-[10px]"><span>TBC 107</span> <span class="text-red-400 font-bold">11.8 km</span></div>
+                                    <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                                        <div class="bg-red-500 h-full" style="width: 90%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-[10px]"><span>TBC 110</span> <span class="text-red-400 font-bold">12.2 km</span></div>
+                                    <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                                        <div class="bg-red-500 h-full" style="width: 95%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-[#0A3D62]/30 p-3 rounded-xl border border-instGold/20 flex justify-between items-center text-xs">
+                            <span class="text-slate-300">Potencial Desatendido: <strong class="text-white">520 alumnos</strong></span>
+                            <span class="bg-red-500/10 text-red-500 px-2 py-0.5 rounded font-bold border border-red-500/20">Oportunidad Alta</span>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 17,
+                municipio: "Nicolás Romero",
+                region: "Conclusiones",
+                lat: "19.6278° N",
+                lng: "99.3131° W",
+                posX: 61,
+                posY: 33,
+                title: "NEXTLALPAN Y NICOLÁS ROMERO • Conclusiones Ejecutivas",
+                subtitle: "Agenda Estratégica Operativa 2026",
+                contentHTML: `
+                    <div class="space-y-4 slide-text">
+                        <div class="inline-flex items-center gap-2 bg-instGold/20 text-instGold px-3 py-1 rounded-full text-xs font-mono border border-instGold/30">
+                            <i class="fa-solid fa-flag-checkered"></i> Agenda Directiva Final 2026
+                        </div>
+                        <h2 class="slide-title">Conclusiones y Directrices de Expansión</h2>
+                        <p class="slide-text">
+                            El estudio valida vacíos de cobertura en <strong class="text-instGold font-semibold">Nextlalpan</strong> (Ex Hacienda Santa Inés) y <strong class="text-instGold font-semibold">Nicolás Romero</strong> (Fuentes de San José, donde la distancia es de 10 km).
+                        </p>
+                        
+                        <!-- Analytical Matrix -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-[10px] font-mono leading-tight">
+                            <div class="p-2.5 bg-red-950/25 rounded-lg border border-red-500/30">
+                                <span class="text-red-400 font-bold block mb-1 uppercase"><i class="fa-solid fa-circle-exclamation"></i> 1. PRIORIDAD: NUEVAS CLAVES</span>
+                                <p class="text-slate-300">Atizapán, Tlalnepantla, Chalco, Nextlalpan y Nicolás Romero.</p>
+                            </div>
+                            <div class="p-2.5 bg-emerald-950/25 rounded-lg border border-emerald-500/30">
+                                <span class="text-emerald-400 font-bold block mb-1 uppercase"><i class="fa-solid fa-circle-check"></i> 2. COBERTURA ADECUADA</span>
+                                <p class="text-slate-300">Coatepec Harinas, La Paz y Nezahualcóyotl.</p>
+                            </div>
+                            <div class="p-2.5 bg-amber-950/25 rounded-lg border border-amber-500/30">
+                                <span class="text-amber-400 font-bold block mb-1 uppercase"><i class="fa-solid fa-arrows-spin"></i> 3. FORTALECIMIENTO</span>
+                                <p class="text-slate-300">Ixtapaluca, Coacalco y Toluca.</p>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-slate-900/90 rounded-xl border border-slate-800 text-xs">
+                            <p class="text-slate-300 leading-relaxed">
+                                <strong class="text-white block font-mono">Consenso Ejecutivo:</strong> Se recomienda priorizar recursos hacia las zonas Oriente y Metropolitana del Valle de México para nivelar las brechas de movilidad urbana de forma progresiva.
+                            </p>
+                        </div>
+                    </div>
+                `
+            }
+        ];
+
+        // ENGINE STATE VARIABLES
+        let currentSlideIndex = 0;
+
+        // INITIALIZE APP LAYOUT
+        function initDashboard() {
+            // Populate drop-down selector
+            const selectElement = document.getElementById('slide-jump');
+            selectElement.innerHTML = '';
+            presentationData.forEach((slide, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `${slide.id}. ${slide.municipio} - ${slide.region}`;
+                selectElement.appendChild(option);
+            });
+
+            // Set up physical key event listeners for easy presentation navigation
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'ArrowRight') nextSlide();
+                if (event.key === 'ArrowLeft') prevSlide();
+            });
+
+            // Render first slide
+            renderCurrentSlide();
+        }
+
+        // RENDER CURRENT SLIDE METHOD
+        function renderCurrentSlide() {
+            const currentSlide = presentationData[currentSlideIndex];
+            const viewport = document.getElementById('dynamic-slide-viewport');
+
+            // Apply smooth fade out transition
+            viewport.style.opacity = '0';
+            viewport.style.transform = 'translateY(5px)';
+
+            setTimeout(() => {
+                // Inject strict typography-compliant layout
+                viewport.innerHTML = `
+                    <div class="space-y-1 mb-5">
+                        <span class="text-xs font-mono text-instGold uppercase tracking-widest font-bold block">${currentSlide.region}</span>
+                        <h1 class="slide-title border-l-4 border-instGold pl-3">${currentSlide.title}</h1>
+                        <p class="slide-subtitle">${currentSlide.subtitle}</p>
+                    </div>
+                    <div class="slide-text flex-grow">
+                        ${currentSlide.contentHTML}
+                    </div>
+                `;
+
+                // Fade back in smoothly
+                viewport.style.transition = 'all 0.35s ease-out';
+                viewport.style.opacity = '1';
+                viewport.style.transform = 'translateY(0)';
+
+                // Update UI indices
+                document.getElementById('slide-indicator').textContent = `${currentSlide.id} / ${presentationData.length}`;
+                document.getElementById('slide-jump').value = currentSlideIndex;
+
+                // Move GPS Pin targeting overlays
+                updateGISMapPin(currentSlide);
+
+            }, 250);
+        }
+
+        // SYNCHRONIZE MAP TARGETING OVERLAY
+        function updateGISMapPin(slide) {
+            const targetDiv = document.getElementById('target-coordinates');
+            const targetLabel = document.getElementById('current-target-label');
+
+            // Update Lat/Long metrics
+            document.getElementById('label-coord-lat').textContent = `LAT: ${slide.lat}`;
+            document.getElementById('label-coord-lng').textContent = `LNG: ${slide.lng}`;
+            document.getElementById('label-region-tag').textContent = slide.region;
+
+            if (slide.posX !== undefined && slide.posY !== undefined) {
+                // Center the crosshairs over the pixel target coordinates relative to 98c085_6a69e2be27b79d78d18376ac1b509310.avif
+                targetDiv.style.left = `${slide.posX}%`;
+                targetDiv.style.top = `${slide.posY}%`;
+                targetDiv.style.display = 'flex';
+
+                // Update overlay flag title
+                targetLabel.textContent = slide.municipio;
+            } else {
+                targetDiv.style.display = 'none';
+            }
+        }
+
+        // CONTROLLER NAVIGATION
+        function prevSlide() {
+            if (currentSlideIndex > 0) {
+                currentSlideIndex--;
+                renderCurrentSlide();
+            }
+        }
+
+        function nextSlide() {
+            if (currentSlideIndex < presentationData.length - 1) {
+                currentSlideIndex++;
+                renderCurrentSlide();
+            }
+        }
+
+        function jumpToSlide(index) {
+            currentSlideIndex = parseInt(index);
+            renderCurrentSlide();
+        }
+
+        // Execute app constructor
+        window.onload = initDashboard;
+    </script>
+</body>
+</html>
